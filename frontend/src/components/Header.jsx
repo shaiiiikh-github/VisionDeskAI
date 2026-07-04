@@ -1,11 +1,8 @@
 function Header() {
     return (
-        <div style={{
-            marginBottom: "30px"
-        }}>
+        <div>
             <h1>VisionDesk AI</h1>
-
-            <p>Screen Intelligence</p>
+            <p>AI that quietly understands your screen.</p>
         </div>
     );
 }

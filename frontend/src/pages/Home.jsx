@@ -22,11 +22,11 @@ function Home() {
 
             setResponse(res.data.response);
 
-        } catch (err) {
+        } catch (error) {
 
-            console.error(err);
+            console.error(error);
 
-            setResponse("Failed to analyze screen.");
+            setResponse("Failed to analyze the screen.");
 
         } finally {
 
