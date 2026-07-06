@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.models import Region
 from app.services.capture_service import capture_screen
 from app.services.gemini_service import analyze_image
 
@@ -17,10 +18,10 @@ app.add_middleware(
 )
 
 
-@app.get("/analyze")
-def analyze():
+@app.post("/analyze")
+def analyze(region: Region):
 
-    image = capture_screen()
+    image = capture_screen(region)
 
     answer = analyze_image(image)
 

@@ -1,33 +1,120 @@
-const { app, BrowserWindow } = require("electron");
+const {
+    app,
+    BrowserWindow,
+    globalShortcut,
+    ipcMain,
+    screen
+} = require("electron");
+
+const path = require("path");
+
+const { createSelectionWindow } = require("./selectionWindow.cjs");
+
+let mainWindow;
+let selectionWindow;
 
 function createWindow() {
-    const win = new BrowserWindow({
-        width: 1400,
-        height: 900,
-        minWidth: 1000,
-        minHeight: 700,
+
+    mainWindow = new BrowserWindow({
+
+        width: 420,
+        height: 260,
+
+        frame: false,
+        transparent: true,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        resizable: false,
+        movable: true,
+        show: false,
+        hasShadow: false,
         autoHideMenuBar: true,
+
         webPreferences: {
+            preload: path.join(__dirname, "preload.cjs"),
             contextIsolation: true,
             nodeIntegration: false
         }
+
     });
 
-    win.loadURL("http://localhost:5173");
+    mainWindow.loadURL("http://localhost:5173");
+
+    mainWindow.once("ready-to-show", () => {
+
+        const display = screen.getPrimaryDisplay();
+        const { width } = display.workAreaSize;
+
+        mainWindow.setPosition(width - 440, 30);
+
+    });
+
 }
 
-app.whenReady().then(() => {
-    createWindow();
+/*
+|--------------------------------------------------------------------------
+| React -> Electron
+|--------------------------------------------------------------------------
+*/
 
-    app.on("activate", () => {
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
-        }
-    });
+ipcMain.on("hide-window", () => {
+
+    if (mainWindow) {
+
+        mainWindow.hide();
+
+    }
+
 });
 
-app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") {
-        app.quit();
-    }
+/*
+|--------------------------------------------------------------------------
+| Selection -> Electron
+|--------------------------------------------------------------------------
+*/
+
+ipcMain.on("region-selected", (event, region) => {
+
+    console.log("Selected Region:", region);
+
+    selectionWindow.hide();
+
+    mainWindow.show();
+
+    mainWindow.focus();
+
+    mainWindow.webContents.send("selected-region", region);
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| App Ready
+|--------------------------------------------------------------------------
+*/
+
+app.whenReady().then(() => {
+
+    createWindow();
+
+    selectionWindow = createSelectionWindow();
+
+    globalShortcut.register("Alt+Space", () => {
+
+        selectionWindow.show();
+
+    });
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Cleanup
+|--------------------------------------------------------------------------
+*/
+
+app.on("will-quit", () => {
+
+    globalShortcut.unregisterAll();
+
 });
